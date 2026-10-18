@@ -153,6 +153,15 @@
         "400",
         "401"
       ]
+    },
+    {
+      "method": "GET",
+      "path": "/v2/pals/{pal_id}/tools",
+      "documented_response_codes": [
+        "200",
+        "400",
+        "401"
+      ]
     }
   ],
   "layer_field_snapshot": {
@@ -317,92 +326,103 @@
   "example_checks": [
     {
       "check": "request POST /v2/faces",
-      "document_line": 153,
+      "document_line": 157,
       "result": "pass"
     },
     {
       "check": "request POST /v2/voices",
-      "document_line": 193,
+      "document_line": 197,
       "result": "pass"
     },
     {
       "check": "request PATCH /v2/faces/{face_id}",
-      "document_line": 205,
+      "document_line": 209,
       "result": "pass"
     },
     {
       "check": "request POST /v2/pals",
-      "document_line": 214,
+      "document_line": 218,
       "result": "pass"
     },
     {
       "check": "request POST /v2/conversations",
-      "document_line": 262,
+      "document_line": 263,
       "result": "pass"
     },
     {
       "check": "response POST /v2/conversations 200",
-      "document_line": 292,
+      "document_line": 293,
       "result": "pass"
     },
     {
       "check": "event interrupt",
-      "document_line": 390,
+      "document_line": 414,
       "result": "pass"
     },
     {
       "check": "event conversation_utterance_streaming",
-      "document_line": 403,
+      "document_line": 427,
       "result": "pass"
     },
     {
       "check": "event sensitivity",
-      "document_line": 434,
+      "document_line": 458,
       "result": "pass"
     },
     {
       "check": "event overwrite_llm_context",
-      "document_line": 446,
+      "document_line": 470,
       "result": "pass"
     },
     {
       "check": "request POST /v2/tools",
-      "document_line": 488,
+      "document_line": 512,
+      "result": "pass"
+    },
+    {
+      "check": "request POST /v2/tools",
+      "document_line": 592,
+      "result": "pass"
+    },
+    {
+      "check": "request POST /v2/tools",
+      "document_line": 629,
       "result": "pass"
     },
     {
       "check": "request POST /v2/pals/{pal_id}/tools",
-      "document_line": 517,
+      "document_line": 666,
       "result": "pass"
     },
     {
       "check": "event echo",
-      "document_line": 534,
+      "document_line": 691,
       "result": "pass"
     },
     {
       "check": "event echo",
-      "document_line": 551,
+      "document_line": 708,
       "result": "pass"
     },
     {
       "check": "request PATCH /v2/pals/{pal_id}",
-      "document_line": 586,
+      "document_line": 743,
       "result": "pass"
     }
   ],
   "syntax_checks": {
-    "markdown_json_blocks": 16,
+    "markdown_json_blocks": 19,
     "sse_json_frames": 4,
     "code_fences": "pass",
-    "existing_local_links": "pass"
+    "existing_local_links": "pass",
+    "fixed_tool_envelope_arguments": "pass"
   },
   "validation_limits": [
     "Subset checks: declared example field names, primitive types, enums, required keys, array limits and selected descriptive rules; not a complete JSON Schema validator.",
     "OpenAPI descriptions contain requirements missing from required arrays.",
     "Dynamic JSON Schema tool parameters are not treated as fixed business permissions.",
     "Placeholders are not valid resource identifiers, credentials, source media URLs or decodable audio.",
-    "SSE example is our proposed compatible output; exact Tavus inbound request and consumption remain untested."
+    "SSE and Echo examples describe out-of-scope alternative architectures, not the current POC. Native tool delivery, model behavior, cancellation and media remain untested."
   ],
   "known_document_conflicts": [
     "publish remains in downloaded OpenAPI but endpoint page says removed/404",
@@ -411,5 +431,32 @@
     "Face callback ready versus GET completed; normalize and re-query"
   ],
   "live_api_verified": false,
-  "real_media_verified": false
+  "real_media_verified": false,
+  "examples_verified_local_date": "2026-10-19",
+  "design_version": "v0.4",
+  "poc_integration": "Tavus native full, tavus-gemma-4 realtime responses, per-turn Pi observation/planning via native context events, native teaching/closing Tools API, same-source summary and authorized conversation records, native post_call reconciliation.",
+  "goal_alignment_baseline": {
+    "repository": "ask_kai_freetalk",
+    "commit": "23f936cfd19081235497a1cb146443045fed075a",
+    "working_tree_clean": true,
+    "reviewed_date": "2026-10-19",
+    "requirements_count": 19,
+    "live_gates_executed": false,
+    "reference_files_sha256": {
+      "README.md": "c8ca7f442d78200e3857627e188998cf99d2ce6f0896abee3930a65b327306a7",
+      "docs/implementation-plan.md": "4e7dfd3e5c5bceebaa3be524bbb0c5873bc66666a349f24fad3ab5b406978012",
+      "docs/free-conversation-planner-summary.md": "e3a70aa2afb701fd4448a0e1324d8be6d7f6ad810dd43d4b0a9e8b32e022efe0",
+      "docs/dynamic-goal-lifecycle.md": "b36f97956fcea94046fc3ae814ea8ca859c1019a5fe797e2ab768aa3343a0d27",
+      "docs/scoped-language-requests.md": "306bd0c0793ed4b9035f9d24a95704d973b235342d7c2eebd42903fd8e4bb91b",
+      "docs/short-replies.md": "8deac86d89b4ba341e68953feded6f5f189fcce533a2722e436437ce879009fe",
+      "docs/planner-speaking-difficulty-v2.md": "d995038bf22b1cd95e0f0c3302c6085e7225a9ed80f1fb4e2e1af089544ffbcc",
+      "docs/conversation-closing-design.md": "6827d0c12b5bf174a43220b506f828b92141bc0b9b9e95f7d463b4f8caec6cbc",
+      "docs/agent-feedback-design.md": "fce080782d969cbeff026c6348f8de0801a998290f3893defb554fa55eb12dbb",
+      "docs/mock-learners.md": "6950e507e19c1fa947a9dc3a8ea30d3ff19d8ebcc2b602f864e6ff9b0408e5cb",
+      "docs/experience-baseline.md": "548be56cf919afbff004ffebc5fbf8ef1d5d0f1b71d17f566ccdc92357d078bd",
+      "docs/evaluation-policy-freeze.md": "73fb10a8bac4ce5e2a8ee830aa4fffafb4abacd7ed48a7432224c7dd89a385e6",
+      "docs/agent-evaluation-plan.md": "ee279d43dd32b019d9de63258e783a7308c2f8823b16ed3f9a5bd9ad36579c54",
+      "docs/eval-datasets/freechat-v3.1/ask-kai-freechat-eval-v3.1.json": "8d32f2b2729fcc5a01875781ab1f28db12d8c07e5cd2ecf0d8848f959542406a"
+    }
+  }
 }

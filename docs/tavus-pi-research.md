@@ -1,12 +1,12 @@
 # Tavus 与 Pi 选型研究
 
-研究日期：2026-10-18。用途：为 Ask Kai Free Talk 的数字人教师 POC 提供选型依据。
+研究日期：2026-10-18；职责与方案更新：2026-10-19。用途：为 Ask Kai Free Talk 的数字人教师 POC 提供选型依据。
 
-v0.2 增补：已下载并核对官方完整 OpenAPI。实际端点、字段、请求响应、协议与文档冲突详见 [分层控制权及 API 接入设计](tavus-layer-and-api-design.md)；静态核对不等于真实账号调用成功。
+v0.4：用户已确认 Tavus 使用 tavus-gemma-4 生成实时回复，Pi 负责教学规划与工具。已下载并核对官方完整 OpenAPI。实际端点、字段、请求响应、协议与文档冲突详见 [分层控制权及 API 接入设计](tavus-layer-and-api-design.md)；静态核对不等于真实账号调用成功。
 
 ## 1. 结论与适用条件
 
-**值得进入 POC。推荐保留我们对教学 Agent 的控制，把 Tavus 用作可配置的实时音视频和数字人层。** Pi 位于每轮回复的生成路径，负责教学动作、上下文和受控工具；Tavus 负责识别、话轮、语音合成、人物视频及 RTC。
+**采用 Tavus 原生 full pipeline：托管 tavus-gemma-4 生成实时回复，Pi 负责教学规划与受控工具。** Pi 在开聊前准备方案，每个有效学生回合异步观察并规划，按需通过原生工具返回结果；结束前审查同源摘要，课后对账；不再自建兼容 SSE 或替换 ASR/TTS/RTC。
 
 用户已确认已有真人老师形象、有授权、可以拍摄视频。建议以真人视频创建定制 Face；先验证“像本人”，再验证“作为中文老师好用”。这两个结果要分别报告。
 
@@ -21,9 +21,9 @@ Tavus 当前文档把整体角色称为 **PAL**，外观称为 **Face**，一次
 | 层 | 能力 | 对本项目的意义 |
 | --- | --- | --- |
 | Phoenix / Face | 根据素材生成实时人物视频 | 老师外观、表情和口型的载体 |
-| STT | 识别学生语音 | 为 Pi 提供文字输入 |
+| STT | 识别学生语音 | 为 Tavus 实时回复和工具调用提供输入 |
 | Sparrow / Conversational Flow | 判断轮次、等待与打断 | 减少初学者组织中文时被抢话 |
-| LLM | Tavus 托管模型或自定义后端 | 本项目将此处连接 Pi Gateway |
+| LLM | Tavus 托管模型或自定义后端 | 本项目选原生 tavus-gemma-4，按需调用 Pi 工具 |
 | TTS / Voice | 朗读、声音及语速配置 | 中文示范的音质和可懂度 |
 | Raven / Perception | 音视频场景理解 | 看图、展示物品等后续能力 |
 | RTC / Daily | 浏览器实时通话和数据通道 | 嵌入现有页面 |
@@ -34,40 +34,42 @@ Tavus 当前文档把整体角色称为 **PAL**，外观称为 **Face**，一次
 
 | 项目 | 可配置部分 | 不能据此承诺的部分 | POC 选择 |
 | --- | --- | --- | --- |
-| 教师身份与教学风格 | 提示词、上下文、我们自己的决策代码 | 提示词不能保证每轮绝对遵循 | 人格与教学政策由 Pi 侧版本化 |
-| 大模型 | 自定义兼容接口；后端可以是业务逻辑 | 不是直接把任意 SDK 接给 Tavus | Gateway 转换 Pi 输出为兼容 SSE |
-| 业务工具 | Tavus 有工具体系；Pi 也可运行工具 | 不自动拥有 HSKai 权限 | 教学业务工具集中由 Pi Tool Broker 执行 |
+| 教师身份与教学风格 | 提示词、上下文、我们自己的决策代码 | 提示词不能保证每轮绝对遵循 | 教学政策由我们版本化，配置 PAL 并由 Pi 提供计划；执行效果需评测 |
+| 大模型 | 自定义兼容接口；后端可以是业务逻辑 | 不是直接把任意 SDK 接给 Tavus | 本 POC 不替换该层；直接配置托管 Gemma |
+| 业务工具 | Tavus 有工具体系；Pi 也可运行工具 | 不自动拥有 HSKai 权限 | 原生 Tools API 将请求交给 Pi/受控业务端口；权限由程序校验 |
 | 真人外观 | 以照片或视频创建定制 Face | 不保证任意镜头、服装细节和动作精确一致 | 已有老师真人视频，比较 Phoenix 路径 |
 | 声音 | Face 默认声音、Tavus Voice、指定外部声音 | 声音克隆不保证普通话教学发音准确 | 先验证本人声音，再决定是否换教学声线 |
 | 语言 | 明确声明 `zh`、`en` | 识别中文不等于能识别所有学习者口音 | 中文优先，只开需要的两种语言 |
 | 语速 | 部分 TTS 引擎支持全局或分句控制 | 不是所有引擎同一字段都有效 | 慢速与正常两档，固定引擎实测 |
-| 轮次与打断 | 等待耐心、可打断程度、外部 interrupt | 不保证外部 Pi 自动取消，也不保证已缓冲音频撤回 | 双向取消探针，必要时即时静音 |
+| 轮次与打断 | 等待耐心、可打断程度、外部 interrupt | 不保证外部 Pi 自动取消，也不保证已缓冲音频撤回 | 分别测试 Tavus 停播、Pi 规划取消与迟到工具结果 |
 | 感知 | 开关、查询与提示配置 | 不把感知推测当作能力评估 | 首期关闭；后续只加有明确用途的视觉输入 |
 | UI | 自定义 Daily UI，或复制 Tavus React 组件 | 无法把原 PCM transport 原样换成 WebRTC | 保留 Free Talk 业务界面，新建媒体适配 |
-| 长期记忆 | Tavus 有参与者记忆；我们也能自行管理 | 厂商记忆不自动等于业务学习证据 | 业务系统统一管理，避免双重事实来源 |
-| 部署 | 我们部署 Pi 与业务接口 | Tavus 云不能仅凭这些 API 被自部署 | 联调需 Tavus 可访问的 HTTPS Gateway |
+| 长期记忆 | Tavus 有参与者记忆；我们也能自行管理 | 厂商记忆不自动等于业务学习证据 | 业务证据由我们管理，跨会话偏好有需要先试原生记忆 |
+| 部署 | 我们部署 Pi 与业务接口 | Tavus 云不能仅凭这些 API 被自部署 | 联调需 Tavus 可达的 HTTPS 工具接收端 |
 
 依据：[LLM](https://docs.tavus.io/sections/conversational-video-interface/pal/llm)、[TTS](https://docs.tavus.io/sections/conversational-video-interface/pal/tts)、[STT](https://docs.tavus.io/sections/conversational-video-interface/pal/stt)、[轮次](https://docs.tavus.io/sections/conversational-video-interface/pal/conversational-flow)、[语言](https://docs.tavus.io/sections/conversational-video-interface/language-support)、[感知](https://docs.tavus.io/sections/conversational-video-interface/pal/perception)。
 
-### 3.1 自定义 LLM 的关键事实
+### 3.1 当前接法：原生 LLM + Tools API
 
-官方要求自定义后端支持 `/chat/completions` 和 SSE，配置项包含 `model`、`base_url`、`api_key`，可添加额外 headers。自定义后端不一定真的只是一个 LLM，可以运行 Agent 后再返回兼容结果。因此，**Tavus 调用我们的 Pi Gateway** 是有官方依据的架构推导，而不是已有的官方 Pi 插件。[自定义 LLM](https://docs.tavus.io/sections/conversational-video-interface/pal/llm)
+在 PAL 的 `layers.llm.model` 配置 `tavus-gemma-4`。使用 `POST /v2/tools` 定义教学规划工具，再 `POST /v2/pals/{pal_id}/tools` 关联，HTTPS/HMAC 交付到我们的 Pi 服务。规划工具使用 `on_resolve=generate_response`，由 Tavus 结合结果生成自然回复；`add_to_context` 仅影响后续输入，不能假称本轮已按 Pi 计划执行。[LLM](https://docs.tavus.io/sections/conversational-video-interface/pal/llm)、[LLM Tools](https://docs.tavus.io/sections/conversational-video-interface/pal/llm-tool)
 
-默认启用的 speculative inference 会在学生说完前开始推理。本 POC 初期关闭它，以降低重复推理、错误归属与误写学习记录的复杂度；待取消、重试和输入修订经过验证后再做对照实验。这是我们的设计取舍。
+保持原生 speculative inference 默认值起步，测试输入修订、取消与误触发。Pi 工具默认只读/返回提案，业务写入由程序验证。工具触发与结果采纳由托管 LLM 决定，Pi 不具备每句播放前的硬审批权；验收要有漏调用、错误采纳与迟到结果样例。
 
-文档没有在本次阅读中充分保证：每次自定义 LLM 请求一定带可用的 conversation ID；断开 SSE 一定取消模型；请求重试一定有稳定 request ID；输出 token 一定全部被朗读。实现必须实测，不把这些当默认事实。
+自定义 LLM 仍是可行能力：兼容 `/chat/completions`、SSE，并配置 model/base_url/api_key。该路线会把回复生成权转向自有后端，不属于本次 POC。公开资料未确认供 Pi 直接调用 Tavus 托管 Gemma 的独立通用端点，因此 Pi 的规划模型仍需另外选型。
 
-### 3.2 会话级定制不能靠修改共享 PAL
+### 3.2 稳定 PAL 与会话级上下文
 
-共享 PAL 适合稳定配置加每次会话上下文。需要不同声音、后端凭证或行为时，官方也支持每会话创建 PAL 的方式。修改共享 PAL 可能影响其他活动会话，所以本 POC 推荐临时 PAL，以会话专用 Gateway 凭证做可靠身份绑定。[PAL 策略](https://docs.tavus.io/sections/onboarding-guide/pal-strategies)
+本 POC 使用稳定版本 PAL 配置老师、声音、教学规则与工具；每次 Conversation 放入 Pi 初始摘要、开场和授权范围，不为单个学生 PATCH 共享 PAL。HMAC 工具 envelope 提供 conversation_id、tool_call_id，服务端据映射路由，无需为路由每会话创建临时 PAL。[PAL 策略](https://docs.tavus.io/sections/onboarding-guide/pal-strategies)、[Tool Delivery](https://docs.tavus.io/sections/conversational-video-interface/pal/llm-tool-delivery)
 
-文档不同页面存在更新节奏差异。例如策略页把 objectives 归入 PAL 层，而当前 Create Conversation API 已列出 `objectives_id` 覆盖。本项目按具体端点 schema 和真实测试确定字段，不把概览页的限制扩展成绝对结论。[Conversation API](https://docs.tavus.io/api-reference/conversations/create-conversation)
+跨会话原生记忆依赖同一 PAL 与参与者 tag；默认不发 tag，有需求先用合成资料试验，不另建聊天记忆替代品。业务画像与学习证据继续由业务系统管理。正常结束前通过原生 in_call 工具取得 Pi 审查后的结构化摘要，由 Tavus 生成口头回顾；课后候选使用原生 post-call 对账，同一授权会话记录自动保存并读回，学习尝试仍独立授权。[Memories](https://docs.tavus.io/sections/conversational-video-interface/memories)、[Post-Call Actions](https://docs.tavus.io/sections/conversational-video-interface/pal/post-call-tool)
+
+文档不同页面存在更新节奏差异，例如策略页把 objectives 归入 PAL 层，Create Conversation API 已列出 objectives_id 覆盖。本项目按端点 schema 与实测确定字段。[Conversation API](https://docs.tavus.io/api-reference/conversations/create-conversation)
 
 ### 3.3 重新核对后的替换层级
 
 LLM 的 `base_url` 支持真正外接后端；STT 的 `stt_engine` 只是在平台支持列表中切换，没有与 LLM 对称的自定义识别服务 URL；TTS 支持指定供应商账号/声音，也不能推导出任意 TTS URL 可接。Sparrow 与 Raven 可配置或关闭，当前没有公开任意替代服务端点。Phoenix 在选择 Tavus Avatar 时继续由 Tavus 执行。
 
-若希望所有语音和轮次技术自主选型，应选 Echo 的音频输入或独立 LiveKit/Pipecat 等集成；此时 Tavus 主要提供同步人物媒体，外部框架承担被移出的能力。**并非只能买整套，但替换不同层需要不同接入模式。** 当前 POC 默认 A，同时保留 B 为清楚定义的备选，详见技术附件第 1–2 节。
+若希望所有语音和轮次技术自主选型，应选 Echo 的音频输入或独立 LiveKit/Pipecat 等集成；此时 Tavus 主要提供同步人物媒体，外部框架承担被移出的能力。**并非只能买整套，但替换不同层需要不同接入模式。** 当前 POC 选择原生 A；自定义 LLM 与 Echo 只保留为能力参考，不自动扩展实施范围，详见技术附件第 1–2 节。
 
 ## 4. 已有真人老师形象怎么接
 
@@ -114,15 +116,15 @@ Agent core 提供上下文处理、模型流、工具执行、事件与取消等
 
 现有 POC 是 Node.js 工程，三类资料使用 Mock HSKai；豆包 Seeduplex 负责持续语音，MiniMax 用于规划。Pi 已有可选 Planner 适配，不能因此称为“所有回复均由 Pi 先决策”。现有逐轮规划主要是对后续输入提供建议。
 
-本次新 POC 的变化在于：Tavus 转写后调用我们的兼容端点；Pi 在这个端点里决定并生成本轮回复。已有的权限、零目标自由聊天、按需支架、证据与取消规则可复用，但音频传输、播放控制和字幕归属需要新适配，现有 MiniMax 规划封装也不能自动当作实时口语生成器。
+本次新 POC 的变化在于：Tavus 原生 Gemma 接管实时口语回复，Pi 保留教学规划与工具职责，通过原生 Tools API 接入。已有权限、零目标聊天、按需支架、证据及取消原则可复用；音频传输、播放控制、字幕与工具回调需新适配。已有 MiniMax 只是规划模型候选，不视为本项目已选定。
 
 ## 7. 三条接入路线比较
 
 | 路线 | Pi 的位置 | 好处 | 代价 | 结论 |
 | --- | --- | --- | --- | --- |
-| A：Tavus full + 自定义 Pi Gateway | 本轮教学回复生成路径 | 保留 Tavus 轮次/TTS/渲染，教学由我们控制 | 外部推理延迟、协议桥接、取消需要验证 | **主方案** |
-| B：自建语音链 + Pi + Tavus Echo / LiveKit / Pipecat | 识别和语音之间 | 对 ASR/TTS 和原始音频控制更强 | 自建轮次、同步、取消与媒体编排；整体复杂 | A 的中文/控制能力失败后的备选 |
-| C：Tavus 托管 LLM + Pi 后台工具或建议 | 实时回复之外 | 快速形成演示、可做质量对照 | Pi 不能证明控制本轮回复 | 不作为用户要求的最终 POC |
+| A：Tavus full + 原生 Gemma + Pi 原生工具 | 初始化、逐轮观察/规划、按需工具、结束前摘要与课后对账 | 保留原生实时链，Pi 管教学计划和业务工具 | 工具触发与建议采纳不能程序性保证每句遵循 | **用户确认的主方案** |
+| C：Tavus full + 自定义 Pi LLM 后端 | 生成每轮回复文本 | 可自行控制回复文本与模型 | 改变职责边界，增加 SSE、取消及推理适配 | 能力参考，不纳入本 POC |
+| B：自建语音链 + Pi + Tavus Echo / 集成 | 识别与语音之间 | 更强的 ASR/TTS/媒体控制 | 自建轮次、同步、取消和媒体编排 | 能力参考，不纳入本 POC |
 
 Echo 绕过大部分 CVI，第三方集成也有独立能力边界。不能选择 B 后继续宣称保留了完整 Tavus 的感知与识别能力。[Pipeline Modes](https://docs.tavus.io/sections/conversational-video-interface/quickstart/pipeline-modes)
 
@@ -134,6 +136,8 @@ Pi 与 Pipecat 是不同项目：前者是本次指定的 Agent 底座，后者�
 
 采购与实施前需确认：目标地区可达性、数据处理与留存、删除覆盖范围、RTC/TTS 子服务、最大并发、Face 训练费用、会话计时起止、重连和等待是否计费。我们关闭业务录音不等于供应商没有日志；结束通话也不等于删除数据。
 
-最小技术探针清单：自定义 SSE 请求与认证、每会话绑定、断线取消与重试、中文及中英切换、慢速朗读、真实打断、Face 正式状态、两会话隔离、房间结束清理。验收方法见 [PRD](tavus-agent-poc-prd.md)。
+最小技术验证清单：原生 Gemma 回复、工具注册与关联、HMAC 交付、结果采纳、超时/重试/打断中迟到结果、中文及中英切换、语速、正式 Face、同 PAL 双会话隔离、结束及 post-call 对账。验收方法见 [PRD](tavus-agent-poc-prd.md)。
 
-进一步核对发现：流式 speech 为累计文本，完整 utterance 在打断时可能仍含未说稿；普通会话 callback 与工具 API HMAC 回调也有不同保证。技术附件已将这些落实为字幕、证据和认证合同，不能继续以“收到事件就证明已呈现”简化实现。
+进一步核对发现：流式 speech 为累计文本，完整 utterance 在打断时可能仍含未说稿；普通会话 callback 与工具 API HMAC 回调也有不同保证。技术附件已将这些落实为字幕、证据和认证契约，不能继续以“收到事件就证明已呈现”简化实现。
+
+与源仓库目标的逐项审查见 [Free Talk 目标对照](ask-kai-freetalk-alignment.md)：v0.3 的仅按需规划和独立课后小结不足以覆盖要求，v0.4 已补成必要验收项。实际话语归属、上下文后续遵循、同源结束与媒体播放边界仍须 M0 验证；未通过不得标记达到源仓库目标。
