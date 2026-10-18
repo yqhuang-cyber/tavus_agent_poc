@@ -326,87 +326,87 @@
   "example_checks": [
     {
       "check": "request POST /v2/faces",
-      "document_line": 157,
+      "document_line": 159,
       "result": "pass"
     },
     {
       "check": "request POST /v2/voices",
-      "document_line": 197,
+      "document_line": 199,
       "result": "pass"
     },
     {
       "check": "request PATCH /v2/faces/{face_id}",
-      "document_line": 209,
+      "document_line": 211,
       "result": "pass"
     },
     {
       "check": "request POST /v2/pals",
-      "document_line": 218,
+      "document_line": 220,
       "result": "pass"
     },
     {
       "check": "request POST /v2/conversations",
-      "document_line": 263,
+      "document_line": 265,
       "result": "pass"
     },
     {
       "check": "response POST /v2/conversations 200",
-      "document_line": 293,
+      "document_line": 295,
       "result": "pass"
     },
     {
       "check": "event interrupt",
-      "document_line": 414,
+      "document_line": 416,
       "result": "pass"
     },
     {
       "check": "event conversation_utterance_streaming",
-      "document_line": 427,
+      "document_line": 429,
       "result": "pass"
     },
     {
       "check": "event sensitivity",
-      "document_line": 458,
+      "document_line": 460,
       "result": "pass"
     },
     {
       "check": "event overwrite_llm_context",
-      "document_line": 470,
+      "document_line": 472,
       "result": "pass"
     },
     {
       "check": "request POST /v2/tools",
-      "document_line": 512,
+      "document_line": 514,
       "result": "pass"
     },
     {
       "check": "request POST /v2/tools",
-      "document_line": 592,
+      "document_line": 594,
       "result": "pass"
     },
     {
       "check": "request POST /v2/tools",
-      "document_line": 629,
+      "document_line": 631,
       "result": "pass"
     },
     {
       "check": "request POST /v2/pals/{pal_id}/tools",
-      "document_line": 666,
+      "document_line": 668,
       "result": "pass"
     },
     {
       "check": "event echo",
-      "document_line": 691,
+      "document_line": 693,
       "result": "pass"
     },
     {
       "check": "event echo",
-      "document_line": 708,
+      "document_line": 710,
       "result": "pass"
     },
     {
       "check": "request PATCH /v2/pals/{pal_id}",
-      "document_line": 743,
+      "document_line": 745,
       "result": "pass"
     }
   ],
@@ -433,7 +433,7 @@
   "live_api_verified": false,
   "real_media_verified": false,
   "examples_verified_local_date": "2026-10-19",
-  "design_version": "v0.4",
+  "design_version": "v0.5",
   "poc_integration": "Tavus native full, tavus-gemma-4 realtime responses, per-turn Pi observation/planning via native context events, native teaching/closing Tools API, same-source summary and authorized conversation records, native post_call reconciliation.",
   "goal_alignment_baseline": {
     "repository": "ask_kai_freetalk",

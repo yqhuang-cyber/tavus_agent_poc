@@ -1,6 +1,6 @@
 # Ask Kai Free Talk 目标对照与 Tavus POC 验收
 
-2026-10-19 · v1 · 配套 [PRD v0.4](tavus-agent-poc-prd.md)。这是设计审查及必要验收清单，尚无 Tavus 运行或真人通过结果。
+2026-10-19 · v1.1 · 配套 [PRD v0.5](tavus-agent-poc-prd.md)。这是设计审查及必要验收清单，尚无 Tavus 运行或真人通过结果。
 
 ## 1. 对照基线与结论
 
@@ -9,6 +9,8 @@
 以当前 [README](/Users/yuqinghuang/Documents/repos/ask_kai_freetalk/README.md) 和 [implementation-plan](/Users/yuqinghuang/Documents/repos/ask_kai_freetalk/docs/implementation-plan.md) 界定 Free Talk 范围，读取专项最新要求。早期原产品 PRD、旧三入口文档和历史固定句数规则不能覆盖已接受的 Free Talk 修订。源仓库尚未完成的真人体验不能当作本项目已具备的证据；源仓库注明“尚未实现”的难度设计在这里作为明确设计目标，而非既有功能。
 
 **审查结论：v0.3 不能完整达到这些目标；v0.4 已补入缺失的必要要求和实现路径。能否实际达标须通过下表及原生能力验证，不能由文档完整推断产品已通过。** Tavus 仍负责实时口语生成；Pi 仍负责教学规划、工具、反馈与摘要审查。普通对话异步逐轮规划，不改成 Pi 生成所有回复。
+
+v0.5 统一沿用源仓库的 M1–M5 顶层模块，组件归属见 [实施方案](implementation-plan.md)。A01–A19 目标与 G01–G06 验收保持不变；阶段编号使用 S0–S5，避免与模块混用。
 
 ## 2. 逐项对照
 
@@ -38,7 +40,7 @@
 
 ## 3. 关键能力验证与失败处理
 
-| Gate | M0 实际验证 | 不满足时如何判定 |
+| Gate | S1 实际验证 | 不满足时如何判定 |
 | --- | --- | --- |
 | G01 有效话语与计划 | 同一 PAL 两个 Conversation，连续语音、重复、更正、乱序、回复早于 final，证明事件能进入正确本地回合 | 无法证明输入归属或有效回合覆盖时，不宣称逐轮规划完成 |
 | G02 后续建议生效 | 原生 overwrite 上下文经数据通道发送，随后实际语音体现当前语言、拒绝、难度和目标；新输入打断旧更新 | 没有 ACK 就记录 sent/unknown；必要后续行为失败须修复，不用“异步”豁免 |
