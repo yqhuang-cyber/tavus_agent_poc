@@ -1,0 +1,415 @@
+{
+  "source_url": "https://docs.tavus.io/openapi.yaml",
+  "retrieved_local_date": "2026-10-18",
+  "timezone": "Asia/Shanghai",
+  "source_bytes": 509809,
+  "source_sha256": "6476b17a048982279fd3b25df619395f83b4e51286849af32edb19388a626662",
+  "openapi_version": "3.0.3",
+  "declared_info_version": "1.0.0",
+  "scope": "Static documentation verification only; no authenticated API requests, resource creation, or real media tests.",
+  "security_schemes": {
+    "apiKey": {
+      "type": "apiKey",
+      "in": "header",
+      "name": "x-api-key"
+    }
+  },
+  "rest_operations": [
+    {
+      "method": "POST",
+      "path": "/v2/faces",
+      "documented_response_codes": [
+        "200",
+        "400",
+        "401"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/v2/faces/{face_id}",
+      "documented_response_codes": [
+        "200",
+        "400",
+        "401"
+      ]
+    },
+    {
+      "method": "PATCH",
+      "path": "/v2/faces/{face_id}",
+      "documented_response_codes": [
+        "200",
+        "400",
+        "401"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/v2/voices",
+      "documented_response_codes": [
+        "200",
+        "400",
+        "401",
+        "429"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/v2/voices/{voice_id}",
+      "documented_response_codes": [
+        "200",
+        "401",
+        "404"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/v2/pals",
+      "documented_response_codes": [
+        "200",
+        "400",
+        "401"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/v2/pals/{pal_id}",
+      "documented_response_codes": [
+        "200",
+        "400",
+        "401"
+      ]
+    },
+    {
+      "method": "PATCH",
+      "path": "/v2/pals/{pal_id}",
+      "documented_response_codes": [
+        "200",
+        "304",
+        "400",
+        "409",
+        "422"
+      ]
+    },
+    {
+      "method": "DELETE",
+      "path": "/v2/pals/{pal_id}",
+      "documented_response_codes": [
+        "204",
+        "400",
+        "401"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/v2/conversations",
+      "documented_response_codes": [
+        "200",
+        "400",
+        "401"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/v2/conversations/{conversation_id}",
+      "documented_response_codes": [
+        "200",
+        "400",
+        "401"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/v2/conversations/{conversation_id}/end",
+      "documented_response_codes": [
+        "200",
+        "400",
+        "401"
+      ]
+    },
+    {
+      "method": "DELETE",
+      "path": "/v2/conversations/{conversation_id}",
+      "documented_response_codes": [
+        "204",
+        "400",
+        "401"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/v2/tools",
+      "documented_response_codes": [
+        "200",
+        "400",
+        "401",
+        "409"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/v2/pals/{pal_id}/tools",
+      "documented_response_codes": [
+        "200",
+        "400",
+        "401"
+      ]
+    }
+  ],
+  "layer_field_snapshot": {
+    "llm": {
+      "model": {
+        "type": "string"
+      },
+      "base_url": {
+        "type": "string"
+      },
+      "api_key": {
+        "type": "string"
+      },
+      "speculative_inference": {
+        "type": "boolean",
+        "default": true
+      },
+      "headers": {
+        "type": "object"
+      },
+      "extra_body": {
+        "type": "object"
+      }
+    },
+    "stt": {
+      "stt_engine": {
+        "type": "string",
+        "enum": [
+          "tavus-auto",
+          "tavus-parakeet",
+          "tavus-soniox",
+          "tavus-whisper",
+          "tavus-deepgram-medical",
+          "tavus-advanced"
+        ],
+        "default": "tavus-auto"
+      },
+      "hotwords": {
+        "type": "string"
+      }
+    },
+    "tts": {
+      "api_key": {
+        "type": "string"
+      },
+      "tts_engine": {
+        "type": "string",
+        "enum": [
+          "tavus-auto",
+          "cartesia",
+          "elevenlabs",
+          "azure"
+        ],
+        "default": "tavus-auto"
+      },
+      "voice_id": {
+        "type": "string"
+      },
+      "external_voice_id": {
+        "type": "string"
+      },
+      "voice_settings": {
+        "type": "object"
+      },
+      "tts_model_name": {
+        "type": "string"
+      },
+      "pronunciation_dictionary_id": {
+        "type": "string"
+      }
+    },
+    "conversational_flow": {
+      "turn_detection_model": {
+        "type": "string",
+        "enum": [
+          "sparrow-2",
+          "sparrow-1"
+        ]
+      },
+      "turn_taking_patience": {
+        "type": "string",
+        "enum": [
+          "low",
+          "medium",
+          "high"
+        ]
+      },
+      "pal_interruptibility": {
+        "type": "string",
+        "enum": [
+          "low",
+          "medium",
+          "high"
+        ]
+      },
+      "replica_interruptibility": {
+        "type": "string",
+        "enum": [
+          "low",
+          "medium",
+          "high"
+        ],
+        "deprecated": true
+      },
+      "voice_isolation": {
+        "type": "string",
+        "enum": [
+          "off",
+          "near"
+        ],
+        "default": "near"
+      },
+      "wake_phrase": {
+        "type": "string"
+      },
+      "sleep_phrase": {
+        "type": "string"
+      },
+      "idle_engagement": {
+        "type": "string",
+        "enum": [
+          "off",
+          "patient",
+          "eager"
+        ],
+        "default": "off"
+      }
+    },
+    "perception": {
+      "perception_model": {
+        "type": "string",
+        "enum": [
+          "raven-1",
+          "raven-0",
+          "off"
+        ],
+        "default": "raven-1"
+      },
+      "emotion_recognition": {
+        "type": "string",
+        "enum": [
+          "full",
+          "limited",
+          "auto"
+        ],
+        "default": "auto"
+      },
+      "visual_awareness_queries": {
+        "type": "array"
+      },
+      "visual_tool_prompt": {
+        "type": "string"
+      },
+      "audio_awareness_queries": {
+        "type": "array"
+      },
+      "audio_tool_prompt": {
+        "type": "string"
+      }
+    }
+  },
+  "example_checks": [
+    {
+      "check": "request POST /v2/faces",
+      "document_line": 153,
+      "result": "pass"
+    },
+    {
+      "check": "request POST /v2/voices",
+      "document_line": 193,
+      "result": "pass"
+    },
+    {
+      "check": "request PATCH /v2/faces/{face_id}",
+      "document_line": 205,
+      "result": "pass"
+    },
+    {
+      "check": "request POST /v2/pals",
+      "document_line": 214,
+      "result": "pass"
+    },
+    {
+      "check": "request POST /v2/conversations",
+      "document_line": 262,
+      "result": "pass"
+    },
+    {
+      "check": "response POST /v2/conversations 200",
+      "document_line": 292,
+      "result": "pass"
+    },
+    {
+      "check": "event interrupt",
+      "document_line": 390,
+      "result": "pass"
+    },
+    {
+      "check": "event conversation_utterance_streaming",
+      "document_line": 403,
+      "result": "pass"
+    },
+    {
+      "check": "event sensitivity",
+      "document_line": 434,
+      "result": "pass"
+    },
+    {
+      "check": "event overwrite_llm_context",
+      "document_line": 446,
+      "result": "pass"
+    },
+    {
+      "check": "request POST /v2/tools",
+      "document_line": 488,
+      "result": "pass"
+    },
+    {
+      "check": "request POST /v2/pals/{pal_id}/tools",
+      "document_line": 517,
+      "result": "pass"
+    },
+    {
+      "check": "event echo",
+      "document_line": 534,
+      "result": "pass"
+    },
+    {
+      "check": "event echo",
+      "document_line": 551,
+      "result": "pass"
+    },
+    {
+      "check": "request PATCH /v2/pals/{pal_id}",
+      "document_line": 586,
+      "result": "pass"
+    }
+  ],
+  "syntax_checks": {
+    "markdown_json_blocks": 16,
+    "sse_json_frames": 4,
+    "code_fences": "pass",
+    "existing_local_links": "pass"
+  },
+  "validation_limits": [
+    "Subset checks: declared example field names, primitive types, enums, required keys, array limits and selected descriptive rules; not a complete JSON Schema validator.",
+    "OpenAPI descriptions contain requirements missing from required arrays.",
+    "Dynamic JSON Schema tool parameters are not treated as fixed business permissions.",
+    "Placeholders are not valid resource identifiers, credentials, source media URLs or decodable audio.",
+    "SSE example is our proposed compatible output; exact Tavus inbound request and consumption remain untested."
+  ],
+  "known_document_conflicts": [
+    "publish remains in downloaded OpenAPI but endpoint page says removed/404",
+    "JSON Patch value declared string and required, conflicting with generic JSON Patch/remove semantics",
+    "LLM default_query present in guide but absent from downloaded llm properties",
+    "Face callback ready versus GET completed; normalize and re-query"
+  ],
+  "live_api_verified": false,
+  "real_media_verified": false
+}
