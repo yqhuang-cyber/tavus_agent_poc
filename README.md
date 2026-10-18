@@ -1,5 +1,7 @@
 # Tavus × Pi：Ask Kai Free Talk POC
 
+仓库：`tavus_agent_poc`。
+
 2026-10-18 · 研究与需求设计阶段。
 
 推荐使用 **Pi 教学 Agent + Tavus CVI 自定义 LLM 接口 + 已有真人老师的定制 Face**，嵌入现有对外汉语教学系统。Pi 指 [pi.dev](https://pi.dev/)，使用其 TypeScript/Node.js Agent 包，不是 Python。
