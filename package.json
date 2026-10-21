@@ -1,0 +1,29 @@
+{
+  "name": "ask-kai-tavus-poc",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22.19.0"
+  },
+  "scripts": {
+    "dev": "node --import tsx --env-file-if-exists=.env apps/gateway/main.ts",
+    "check": "tsc --noEmit",
+    "test": "node --import tsx --test tests/*.test.ts",
+    "probe:offline": "node --import tsx scripts/probe-offline.ts",
+    "eval:offline": "node --import tsx scripts/eval-offline.ts",
+    "preflight": "node --import tsx --env-file-if-exists=.env scripts/preflight.ts",
+    "prepare:brand-review": "node --import tsx scripts/prepare-brand-review.ts",
+    "verify:offline": "node --import tsx scripts/verify-offline.ts"
+  },
+  "dependencies": {
+    "@earendil-works/pi-agent-core": "1.2.0",
+    "@earendil-works/pi-ai": "1.2.0",
+    "undici": "7.30.1"
+  },
+  "devDependencies": {
+    "@types/node": "22.19.0",
+    "tsx": "4.20.6",
+    "typescript": "5.9.3"
+  }
+}

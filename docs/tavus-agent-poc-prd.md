@@ -7,7 +7,7 @@
 | 产品参照 | 本机 `ask_kai_freetalk` 的自由对话体验 |
 | 用户确认 | 已有真人老师形象，有本人授权，可以拍摄视频 |
 | 技术约束 | 第一阶段起使用 pi.dev 作为 Agent 底座 |
-| 当前交付 | 研究、PRD 与接入设计；尚未实施及真人联调 |
+| 当前交付 | M0 离线、教学/证据核心、Mock 票据、预检、媒体控制核心和一键验收；108 项测试、20 轮探针、36 场景 80 轮协议/状态回放通过；尚未真人联调 |
 
 本文与 [分层控制权及 API 接入设计](tavus-layer-and-api-design.md) 合并构成设计稿。技术附件包含实际 REST 方法/路径、鉴权、Face/PAL/Conversation 请求、Pi SSE、Daily 接入、字幕/打断事件、回调、Echo 替代方案及 OpenAPI 校核记录。
 
@@ -199,6 +199,18 @@ flowchart LR
 用户指定 `tavus-gemma-4`。该型号已记录为所选模型意向，接入方式尚待确认：官方将其列为 Tavus 托管 LLM，本次公开文档及已核对 OpenAPI 未确认供 Pi 独立调用该模型的通用推理端点。[官方模型与接口说明](https://docs.tavus.io/sections/conversational-video-interface/pal/llm)
 
 直接在 PAL 的 `layers.llm.model` 使用该型号，意味着由 Tavus 托管模型生成实时回复；这与当前“Pi 生成本轮回复文本”的边界不同。本次仅记录用户选择，不据此调整 Pi/Tavus 职责或改写现有自定义 LLM 配置。待确认可供 Pi 使用的接口，或由用户明确调整职责后，再落实运行配置；不能把型号填写到 Pi 中就视为已接入。
+
+实施补充（2026-10-19）：用户确认暂时没有该独立接口，先完成离线验证。M0-01～07 已落地，真实模型/Tavus/真人验收保持未运行；见 [task list](implementation-task-list.md) 与 [离线报告](m0-offline-report.md)。
+
+离线增量：M2-03 已实现证据快照、同源小结数据与 Mock 回执；M2-04 已准备 36 个本地场景并完成协议回放。实际口头回顾/页面卡片、原评测基线对齐和真人听感仍待完成，见 [增量报告](m2-offline-report.md)。
+
+后续离线增量：M2-02 已实现有来源的教学状态重算、Pi 动作约束和文字纠错来源校验；M1-01 已实现 Mock 单次准备票据。它们不替代通用意图理解、真实身份或媒体验收，见 [最新合同和验证](teaching-policy-and-preparation.md)。
+
+继续实施增量：已完成只读配置/账本预检、本地素材元数据检查、Face/Voice GET 状态判定与创建/关闭并发清理修复。该阶段 68 项自动检查通过，合成素材不代替真人训练或品牌验收，见 [预检与清理验证](preflight-and-resource-recovery.md)。
+
+后续交付：HTTP 资源故障联测修复了启动断开后继续创建的问题；普通回复计时、独立媒体控制状态机、20 段未审核样例和一键离线验收已落地。全仓增至 87 项；真实声音、设备和品牌仍待验，见 [当前合同与验收说明](offline-control-and-verification.md)。
+
+2026-10-20 离线交付：连接失败/超时及迟到媒体回收、启动/清理阶段计时、可撤销预览和同源回顾提交合同已实现，全仓增至 108 项。真实 Daily、Tavus 朗读和播放确认仍待接入，见 [连接与收尾合同](connection-lifecycle-and-review.md)。
 
 ### 9.2 每轮执行
 
