@@ -28,5 +28,5 @@ export function readRuntimeConfig(env: NodeJS.ProcessEnv) {
   if (!report.canStart) throw new Error(`invalid_runtime_config:${report.checks.filter(c => c.status === 'failed').map(c => c.code).join(',')}`);
   return { modelMode: (env.MODEL_MODE ?? 'fixture') as 'fixture' | 'live', tavusMode: (env.TAVUS_MODE ?? 'offline') as 'offline' | 'live',
     operatorToken: env.OPERATOR_TOKEN!, port: Number(env.PORT ?? 8787), host: env.HOST ?? '127.0.0.1',
-    publicUrl: env.GATEWAY_PUBLIC_URL?.replace(/\/$/, '') };
+    publicUrl: env.GATEWAY_PUBLIC_URL?.replace(/\/$/, '') || undefined };
 }

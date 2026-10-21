@@ -62,6 +62,13 @@ export class TavusClient implements TavusApi {
   getPal(id: string) { return this.request('GET', `/v2/pals/${encodeURIComponent(id)}`, 200); }
   getFace(id: string) { return this.request('GET', `/v2/faces/${encodeURIComponent(id)}`, 200); }
   getVoice(id: string) { return this.request('GET', `/v2/voices/${encodeURIComponent(id)}`, 200); }
+  async createTool(body: Record<string, unknown>) {
+    const data = await this.request('POST', '/v2/tools', 200, body);
+    if (typeof data.tool_id !== 'string' || !data.tool_id) throw new TavusError(200, true, 'invalid_response');
+    return { tool_id: data.tool_id };
+  }
+  attachTools(palId: string, toolIds: string[]) { return this.request('POST', `/v2/pals/${encodeURIComponent(palId)}/tools`, 200, { tool_ids: toolIds }); }
+  getPalTools(palId: string) { return this.request('GET', `/v2/pals/${encodeURIComponent(palId)}/tools`, 200); }
   async createConversation(body: Record<string, unknown>) {
     const data = await this.request('POST', '/v2/conversations', 200, body);
     if (typeof data.conversation_id !== 'string' || !data.conversation_id) throw new TavusError(200, true, 'invalid_response');

@@ -5,6 +5,8 @@ import { TavusClient, TavusError } from '../packages/tavus/client.js';
 import { AssetInputError, assetReadiness } from '../packages/tavus/assets.js';
 import { inspectLocalMedia } from '../packages/tavus/media-preflight.js';
 import { ResourceLedger } from '../packages/tavus/resources.js';
+import { NativeResources } from '../packages/tavus/native-resources.js';
+import { nativeConfiguration } from '../packages/tavus/native-config.js';
 
 let media: string | undefined; let liveAssets = false; let formalAssets = false;
 for (let i = 2; i < process.argv.length; i++) {
@@ -21,9 +23,16 @@ let ledgerReport: unknown; let blocked = !configuration.canStart;
 try {
   const ledger = new ResourceLedger(process.env.RESOURCE_LEDGER ?? '.runtime/resources.json'); await ledger.load();
   const unresolved = [...ledger.records.values()].filter(r => !r.palDeleted);
-  ledgerReport = { status: unresolved.length ? 'needs-reconciliation' : 'clear', unresolvedCount: unresolved.length,
-    unknownCount: unresolved.filter(r => r.outcomeUnknown || r.pending).length };
-  if (unresolved.length) blocked = true;
+  // load/view are read-only; the dummy client cannot be invoked by this path.
+  const native = new NativeResources('.runtime/native-resources.json', new TavusClient('unused-read-only'), nativeConfiguration({
+    operatorToken: '', publicUrl: 'https://offline.invalid', faceId: 'unused-read-only' })); await native.load();
+  const nativeState = native.view(); const nativeUnresolved = nativeState.rooms.filter(r => !r.ended);
+  const nativeUnknown = nativeState.configs.filter(c => c.unknown || c.pending).length + nativeUnresolved.filter(r => r.unknown || r.pending).length;
+  const count = unresolved.length + nativeUnresolved.length;
+  ledgerReport = { status: count || nativeUnknown ? 'needs-reconciliation' : 'clear', unresolvedCount: count,
+    unknownCount: unresolved.filter(r => r.outcomeUnknown || r.pending).length + nativeUnknown,
+    nativeUnresolvedCount: nativeUnresolved.length, nativeUnknownCount: nativeUnknown };
+  if (count || nativeUnknown) blocked = true;
 } catch { ledgerReport = { status: 'invalid-or-unreadable' }; blocked = true; }
 if (media) {
   try { const report = await inspectLocalMedia(media); mediaReport = report; if (!report.metadataEligible) blocked = true; }

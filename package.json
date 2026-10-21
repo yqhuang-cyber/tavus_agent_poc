@@ -7,22 +7,28 @@
     "node": ">=22.19.0"
   },
   "scripts": {
-    "dev": "node --import tsx --env-file-if-exists=.env apps/gateway/main.ts",
+    "dev": "node --import tsx --env-file-if-exists=.env apps/server/main.ts",
+    "dev:legacy": "node --import tsx --env-file-if-exists=.env apps/gateway/main.ts",
+    "build:web": "esbuild apps/web/app.ts --bundle --platform=browser --format=esm --target=es2022 --minify --outfile=.runtime/web/app.js",
     "check": "tsc --noEmit",
     "test": "node --import tsx --test tests/*.test.ts",
     "probe:offline": "node --import tsx scripts/probe-offline.ts",
+    "probe:web": "node --import tsx scripts/probe-web.ts",
     "eval:offline": "node --import tsx scripts/eval-offline.ts",
     "preflight": "node --import tsx --env-file-if-exists=.env scripts/preflight.ts",
     "prepare:brand-review": "node --import tsx scripts/prepare-brand-review.ts",
     "verify:offline": "node --import tsx scripts/verify-offline.ts"
   },
   "dependencies": {
+    "@daily-co/daily-js": "0.94.0",
     "@earendil-works/pi-agent-core": "1.2.0",
     "@earendil-works/pi-ai": "1.2.0",
     "undici": "7.30.1"
   },
   "devDependencies": {
     "@types/node": "22.19.0",
+    "esbuild": "0.25.12",
+    "playwright": "1.56.1",
     "tsx": "4.20.6",
     "typescript": "5.9.3"
   }

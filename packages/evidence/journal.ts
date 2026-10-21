@@ -7,7 +7,7 @@ export interface EvidenceRef {
   stateVersion: number; consentVersion: number; contextVersion: number; connectionEpoch: number;
 }
 export interface InputEvidence extends EvidenceRef {
-  id: string; text: string; modality: InputModality; provenance: 'gateway-input' | 'synthetic-input';
+  id: string; text: string; modality: InputModality; provenance: 'gateway-input' | 'synthetic-input' | 'client-reported';
   assessment: 'not_assessed';
 }
 export interface Selection { id: string; kind: 'topic' | 'attempt'; evidenceId: string; quote: string }
@@ -35,6 +35,14 @@ export class EvidenceJournal {
     this.inputs.set(ref.turnId, evidence); // Last accepted revision replaces prior references.
     this.version++;
     return structuredClone(evidence);
+  }
+  recordClientInput(ref: EvidenceRef, text: string, modality: 'text' | 'audio_transcript') {
+    if (!['text', 'audio_transcript'].includes(modality)) throw new EvidenceError('invalid_client_input_modality');
+    // A separately named entry point preserves the weaker provenance of browser reports.
+    const result = this.record(ref, text, 'unknown', false);
+    const source = this.inputs.get(ref.turnId)!;
+    source.modality = modality; source.provenance = 'client-reported';
+    return structuredClone({ ...result, modality, provenance: 'client-reported' as const });
   }
   select(kind: Selection['kind'], evidenceId: string, quote: string) {
     if (this.frozen) throw new EvidenceError('evidence_frozen');

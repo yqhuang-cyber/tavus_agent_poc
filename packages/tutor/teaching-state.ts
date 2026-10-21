@@ -110,6 +110,6 @@ export function teachingInstructions(state: TeachingState) {
     state.current.topicSwitched ? '学生已换题，旧练习目标已失效，不拉回旧题。' : '',
     state.current.closeRequested ? '学生本轮请求结束：简短确认与有来源的回顾，不增加任务；这不代表媒体已结束或记录已保存。' : '',
     '每轮最多一个追问、一个新教学点、一个纠错重点。不能根据文字评定实际发音、声调或掌握。',
-    state.current.modality === 'text' ? '当前输入是合成文字样本，不把它称为语音练习。' : '当前只有转写/未知来源的文字，不能据此认定学生实际说错或发音正确。',
+    state.current.modality === 'text' ? '当前输入是文字，不把它称为语音练习。' : '当前只有转写/未知来源的文字，不能据此认定学生实际说错或发音正确。',
   ].filter(Boolean).join('\n');
 }

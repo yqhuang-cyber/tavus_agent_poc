@@ -17,6 +17,7 @@ const fixtureEnv = { MODEL_MODE: 'fixture', TAVUS_MODE: 'offline', OPERATOR_TOKE
 test('configuration preflight distinguishes syntax from connectivity and never echoes credential values', () => {
   const offline = runtimeChecks(fixtureEnv); assert.equal(offline.canStart, true);
   assert.equal(offline.connectivity, 'not-run'); assert.equal(offline.modelEndpointContract, 'unverified');
+  assert.equal(readRuntimeConfig({ ...fixtureEnv, GATEWAY_PUBLIC_URL: '' }).publicUrl, undefined);
   assert.doesNotMatch(JSON.stringify(offline), /synthetic-offline-operator/);
   assert.equal(runtimeChecks({ ...fixtureEnv, OPERATOR_TOKEN: 'replace-with-at-least-32-random-characters' }).canStart, false);
   for (const PORT of ['0', '-1', '65536', 'NaN', '8787.5']) assert.equal(runtimeChecks({ ...fixtureEnv, PORT }).canStart, false);
@@ -163,6 +164,18 @@ test('preflight reports pending resources read-only and blocks missing live asse
   const result = await cli(dir, {}, ['--live-assets']); const report = result.report; assert.equal(result.exitCode, 1);
   assert.equal(report.status, 'blocked'); assert.equal(report.resources.unresolvedCount, 1); assert.equal(report.resources.unknownCount, 1);
   assert.equal(report.assets.status, 'missing-key-or-face-id'); assert.equal(await readFile(path, 'utf8'), data);
+});
+
+test('preflight includes unresolved native setup without mutating its ledger or contacting the supplier', async t => {
+  const dir = await mkdtemp(join(tmpdir(), 'askkai-native-preflight-')); t.after(() => rm(dir, { recursive: true, force: true }));
+  await mkdir(join(dir, '.runtime'));
+  const file = join(dir, '.runtime/native-resources.json'); const bytes = JSON.stringify({ version: 1,
+    configs: [{ hash: 'a'.repeat(64), toolIds: [], pending: 'tool', unknown: false }], rooms: [] });
+  await writeFile(file, bytes);
+  const out = await cli(dir, { TAVUS_API_KEY: 'SECRET-NOT-USED' });
+  assert.equal(out.exitCode, 1); assert.equal(out.report.resources.nativeUnknownCount, 1);
+  assert.equal(out.report.assets.status, 'not-run'); assert.equal(out.report.resourceMutations, 0);
+  assert.equal(await readFile(file, 'utf8'), bytes); assert.doesNotMatch(out.data, /SECRET-NOT-USED/);
 });
 
 async function simulatedAssets(dir: string, scenario: Record<string, unknown> = {}) {

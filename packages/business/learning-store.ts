@@ -34,4 +34,8 @@ export class MockLearningStore implements LearningStore {
     return structuredClone(receipt);
   }
   get size() { return this.entries.size; }
+  read(receiptId: string) {
+    const entry = [...this.entries.values()].find(e => e.receipt.id === receiptId);
+    return entry ? structuredClone({ summary: entry.summary, receipt: entry.receipt }) : undefined;
+  }
 }

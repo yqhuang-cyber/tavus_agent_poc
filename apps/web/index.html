@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="zh-CN">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Ask Kai · Free Talk</title><link rel="stylesheet" href="/style.css"></head>
+<body>
+  <header><a class="wordmark" href="/">Kai<span>开口，就有故事。</span></a><span class="tag">FREE TALK · POC</span><span id="mode" class="mode">正在连接本地服务</span></header>
+  <main>
+    <section id="login" class="login" hidden>
+      <span class="eyebrow">WELCOME BACK</span><h1>和 Kai，聊一会儿。</h1><p>进入内部演示，开始一段属于你的中文对话。</p>
+      <form id="login-form"><label for="access-code">演示访问码</label><input id="access-code" type="password" autocomplete="off" required placeholder="填写本地 .env 中的 OPERATOR_TOKEN"><button class="primary" type="submit">进入 Free Talk <span>↗</span></button></form>
+      <p class="muted">这是内部演示访问码，Tavus 和模型密钥只保存在服务端。</p>
+    </section>
+    <div id="workspace" class="workspace" hidden>
+      <aside class="setup">
+        <span class="eyebrow">YOUR SPACE</span><h1>今天，<br>想聊点什么？</h1><p class="intro">不用准备答案。说说生活，<br>也可以从一句「你好」开始。</p>
+        <div class="rule"></div><label class="field-label">选择演示学习者 <span>Mock 资料</span></label>
+        <div id="profiles" class="profiles">
+          <button data-profile="alex" class="profile selected"><b>A</b><span>Alex<small>HSK 1 · 刚刚开始</small></span><i>✓</i></button>
+          <button data-profile="maya" class="profile"><b>M</b><span>Maya<small>HSK 3 · 日常交流</small></span><i>✓</i></button>
+          <button data-profile="leo" class="profile"><b>L</b><span>Leo<small>HSK 5 · 轻松表达</small></span><i>✓</i></button>
+          <button data-profile="nina" class="profile"><b>N</b><span>Nina<small>HSK 7 · 深入交流</small></span><i>✓</i></button>
+        </div>
+        <label class="check"><input id="chinese-only" type="checkbox">这次只用中文</label>
+        <label class="check"><input id="save-allowed" type="checkbox">保存本次小结 <span class="muted">本地模拟</span></label>
+        <p class="fineprint">资料与保存均为 Mock；已保存的小结在服务重启后重置。摄像头始终关闭。</p>
+        <button id="start" class="primary">开始聊天 <span>↗</span></button>
+        <button id="history" class="text-button">查看本地会话记录</button>
+      </aside>
+      <section class="conversation">
+        <div class="section-heading"><span class="eyebrow">A MOMENT IN CHINESE</span><span id="connection-status" class="pill"><i></i>尚未开始</span></div>
+        <div class="stage">
+          <video id="teacher-video" autoplay playsinline muted></video><audio id="teacher-audio" autoplay></audio>
+          <div id="placeholder" class="placeholder"><div class="kai-symbol">开</div><span class="eyebrow">A LITTLE CHINESE, EVERY DAY</span><h2>很高兴见到你。</h2><p>点击「开始聊天」，Kai 会在这里等你。</p><span class="abstract-sun"></span><span class="abstract-arch"></span></div>
+          <div class="stage-label"><span class="live-dot"></span><b>Kai</b><span>你的中文交流伙伴</span></div>
+          <button id="unlock-audio" class="audio-unlock" hidden>点击开启老师声音</button>
+          <div id="caption" class="caption" aria-live="polite" hidden></div>
+        </div>
+        <div class="toolbar"><div class="media-controls"><button id="mic" disabled aria-pressed="false">麦克风开启</button><button id="captions" aria-pressed="true">字幕开启</button><button id="interrupt" disabled>打断一下</button></div><button id="end" class="end-button" disabled>回顾并结束 ↗</button></div>
+        <form id="text-form" class="text-input"><input id="text" disabled maxlength="2000" placeholder="也可以打字告诉 Kai…" aria-label="文字辅助输入"><button id="send" disabled type="submit" aria-label="发送">↑</button></form>
+        <div class="session-footer"><span id="session-note">自在交流，不必每句话都变成练习。</span><button id="exit" class="text-button" disabled>立即退出</button></div>
+        <section id="summary-panel" class="summary-panel" hidden><span class="eyebrow">TAKE A LITTLE WITH YOU</span><h2>今天的交流，留在这里。</h2><p id="summary-text"></p><div id="summary-excerpts"></div><p id="summary-note" class="muted"></p><div class="summary-actions"><button id="confirm-end" class="primary" hidden>我已听完，结束</button><button id="continue" class="secondary" hidden>还想继续聊</button><button id="retry-save" class="secondary" hidden>重试保存</button></div></section>
+        <section id="records" class="summary-panel" hidden><h2>本地会话记录</h2><p class="muted">本地内存 Mock，重启后重置。</p><div id="record-list"></div></section>
+        <details id="diagnostics"><summary>运行观察</summary><pre id="diagnostic-data"></pre><button id="revoke-consent" class="text-button" hidden>撤销本次保存许可</button></details>
+      </section>
+    </div>
+    <div id="notice" class="notice" role="status" aria-live="polite" hidden></div>
+  </main>
+  <footer><span>ASK KAI</span><span>一点中文，一点靠近。</span></footer>
+  <script type="module" src="/app.js"></script>
+</body></html>

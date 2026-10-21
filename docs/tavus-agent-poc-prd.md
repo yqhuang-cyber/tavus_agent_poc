@@ -7,7 +7,7 @@
 | 产品参照 | 本机 `ask_kai_freetalk` 的自由对话体验 |
 | 用户确认 | 已有真人老师形象，有本人授权，可以拍摄视频 |
 | 技术约束 | 第一阶段起使用 pi.dev 作为教学规划与工具 Agent 底座 |
-| 当前交付 | 原生方案设计及 TA-01～42 清单；已合入此前自定义 LLM 方案的离线探针与可复用核心（108 项测试），原生链路及真人验收尚未通过 |
+| 当前交付 | 原生页面、Daily/工具/Pi 编排、同源回顾及 Mock 记录端口已实现；133 项离线测试和 Chromium 页面流程验证，真实供应商/模型/设备/教学及品牌仍待验收 |
 
 本文与 [分层控制权及 API 接入设计](tavus-layer-and-api-design.md) 合并构成设计稿。技术附件包含实际 REST 方法/路径、鉴权、Face/PAL/Conversation 请求、原生工具调用 Pi、Daily 接入、字幕/打断事件、回调、Echo 替代方案及 OpenAPI 校核记录。
 
@@ -580,3 +580,5 @@ docs/                      PRD、研究与后续决策记录
 本 PRD 的目标仍是 Tavus 托管模型生成实时口语、Pi 负责规划与工具。已有探针的 Pi/SSE 口语路径不是该目标的完成证据；原生工具 HMAC、逐轮事件/规划协调、上下文更新、正常收尾、会话记录读回及 post-call 仍需按 [TA 清单](task-list.md) 逐项实现和验收。旧 M0～M3 编号只在 [离线实施记录](implementation-task-list.md) 中保留，不对应当前 M1～M5 模块或 S0～S5 阶段。
 
 历史结果包括 [M0 报告](m0-offline-report.md)、[教学/证据增量](m2-offline-report.md)、[教学状态及准备票据](teaching-policy-and-preparation.md)、[预检与清理](preflight-and-resource-recovery.md)、[一键验收](offline-control-and-verification.md) 和 [连接与同源收尾合同](connection-lifecycle-and-review.md)。合并关系与后续缺口见 [主干合并说明](mainline-merge-notes.md)。
+
+2026-10-21 原生实施补充：默认启动已提供页面和原生链路代码，旧 SSE 探针使用 dev:legacy。正常收尾当前采用人工听完确认，G04 自动播放完成仍未知；原生工具采纳及实际声音需用户 Mac 账号联调。后续状态及复现以 [原生运行说明](native-poc-runbook.md) 和 [TA 清单](task-list.md) 为准，上述合并历史不代表当前已无页面。

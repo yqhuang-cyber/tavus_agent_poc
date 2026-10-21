@@ -12,6 +12,7 @@ export interface TutorInput {
   priorReplies: { text: string; status: string; presentation: 'unknown' }[];
   greeting?: boolean;
   teaching?: TeachingState;
+  summaryReview?: { summaryId: string; oralReview: string; sourceQuotes: string[] };
 }
 export interface Tutor {
   decide(input: TutorInput, signal: AbortSignal): Promise<Decision>;
@@ -65,7 +66,7 @@ export class PiTutor implements Tutor {
     const timerSignal = AbortSignal.timeout(mode === 'DECISION' ? (this.options.decisionMs ?? 500) : (this.options.generationMs ?? 20000));
     const combined = AbortSignal.any([signal, timerSignal]);
     const agent = new Agent({ streamFn: this.options.streamFn, sessionId: undefined, maxRetryDelayMs: 1,
-      initialState: { model: this.options.model, tools: [], systemPrompt: `${teachingPolicy}\n${input.teaching ? teachingInstructions(input.teaching) : ''}\nMODE:${mode}\n${mode === 'DECISION'
+      initialState: { model: this.options.model, tools: [], systemPrompt: `${teachingPolicy}\n${input.teaching ? teachingInstructions(input.teaching) : ''}\n${input.summaryReview ? '本次是已有摘要的来源审查，核对 oralReview 与 sourceQuotes，不增加事实、知识点或掌握结论；返回 REVIEW 和简短核对说明，不生成口语。' : ''}\nMODE:${mode}\n${mode === 'DECISION'
         ? `只返回 JSON，例如 {"action":"RESPOND","reason":"简短依据"}。action 仅选一个：${actions.join('、')}。仅当 CORRECT 时可增加 correction={"kind":"wording","quote":"当前输入中的原文","replacement":"一个替代表达"}；只选一个文字表达重点，不能评定发音或掌握，不含额外字段。`
         : `只输出给学生听的口语文本。已校验的主要动作：${decision?.action}。若有 acceptedDecision.correction，只解释该单一文字重点，不增加其他纠错。不得输出 JSON、Markdown、内部计划。`}` },
       // No tools or autonomous follow-up loop in M0; authorized context is read once locally.
