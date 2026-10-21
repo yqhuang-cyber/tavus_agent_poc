@@ -7,7 +7,7 @@
 | 产品参照 | 本机 `ask_kai_freetalk` 的自由对话体验 |
 | 用户确认 | 已有真人老师形象，有本人授权，可以拍摄视频 |
 | 技术约束 | 第一阶段起使用 pi.dev 作为教学规划与工具 Agent 底座 |
-| 当前交付 | 研究、PRD 与接入设计；尚未实施及真人联调 |
+| 当前交付 | 原生方案设计及 TA-01～42 清单；已合入此前自定义 LLM 方案的离线探针与可复用核心（108 项测试），原生链路及真人验收尚未通过 |
 
 本文与 [分层控制权及 API 接入设计](tavus-layer-and-api-design.md) 合并构成设计稿。技术附件包含实际 REST 方法/路径、鉴权、Face/PAL/Conversation 请求、原生工具调用 Pi、Daily 接入、字幕/打断事件、回调、Echo 替代方案及 OpenAPI 校核记录。
 
@@ -572,3 +572,11 @@ docs/                      PRD、研究与后续决策记录
 | 接入待核实 | 真实业务身份/契约、目标端和地区、数据许可、套餐与计费 |
 
 技术验证、已有真人素材与业务适配可以按上述默认设计推进；文档不能替代真实供应商和真人体验验收。选型的可定制边界及一手来源详见 [研究说明](tavus-pi-research.md)。
+
+## 19. 主干实现状态（2026-10-21）
+
+主干已合入此前 Pi 生成口语、Gateway 转发 SSE 的离线实现：包括授权 Mock 资料、会话隔离/修订/取消、教学状态与动作约束、证据及 Mock 保存、媒体控制/异步执行、资源账本/清理和阶段计时。108 项检查、双会话 20 轮探针及 36 场景 80 轮协议/程序状态回放通过；均不证明真实模型、Tavus、设备或教学语义质量通过。
+
+本 PRD 的目标仍是 Tavus 托管模型生成实时口语、Pi 负责规划与工具。已有探针的 Pi/SSE 口语路径不是该目标的完成证据；原生工具 HMAC、逐轮事件/规划协调、上下文更新、正常收尾、会话记录读回及 post-call 仍需按 [TA 清单](task-list.md) 逐项实现和验收。旧 M0～M3 编号只在 [离线实施记录](implementation-task-list.md) 中保留，不对应当前 M1～M5 模块或 S0～S5 阶段。
+
+历史结果包括 [M0 报告](m0-offline-report.md)、[教学/证据增量](m2-offline-report.md)、[教学状态及准备票据](teaching-policy-and-preparation.md)、[预检与清理](preflight-and-resource-recovery.md)、[一键验收](offline-control-and-verification.md) 和 [连接与同源收尾合同](connection-lifecycle-and-review.md)。合并关系与后续缺口见 [主干合并说明](mainline-merge-notes.md)。

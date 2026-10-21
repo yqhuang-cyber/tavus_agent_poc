@@ -1,6 +1,6 @@
 # Tavus Agent POC 实施方案
 
-2026-10-19 · v1.1 · 依据 [PRD v0.5](tavus-agent-poc-prd.md)、[API 接入设计](tavus-layer-and-api-design.md) 与 [Free Talk 目标对照](ask-kai-freetalk-alignment.md)。执行清单见 [task list](task-list.md)。本文是实施设计，尚未开始运行时开发、供应商调用或部署。
+2026-10-19 · v1.1 · 依据 [PRD v0.5](tavus-agent-poc-prd.md)、[API 接入设计](tavus-layer-and-api-design.md) 与 [Free Talk 目标对照](ask-kai-freetalk-alignment.md)。执行清单见 [task list](task-list.md)。本文定义原生方案的实施设计。主干已合入此前自定义 LLM 方案的离线探针和可复用核心，原生链路仍待按 TA 清单迁移与验收；尚未进行真实供应商调用或部署。详见 [主干合并说明](mainline-merge-notes.md)。
 
 ## 1. 实施目标与固定边界
 
