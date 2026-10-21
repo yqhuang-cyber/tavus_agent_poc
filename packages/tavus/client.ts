@@ -1,5 +1,22 @@
+export type TavusFailureCode = 'http' | 'timeout' | 'dns' | 'tls' | 'connection' | 'invalid_response' | 'transport';
 export class TavusError extends Error {
-  constructor(public status: number | undefined, public outcomeUnknown: boolean) { super(outcomeUnknown ? 'tavus_outcome_unknown' : 'tavus_request_failed'); }
+  constructor(public status: number | undefined, public outcomeUnknown: boolean,
+    public failureCode: TavusFailureCode = status === undefined ? 'transport' : 'http') {
+    super(outcomeUnknown ? 'tavus_outcome_unknown' : 'tavus_request_failed');
+  }
+}
+function transportFailure(error: unknown): TavusFailureCode {
+  // Inspect bounded cause chains; never copy messages, URLs or arbitrary codes into reports.
+  for (let depth = 0; depth < 5 && error && typeof error === 'object'; depth++) {
+    const e = error as { name?: unknown; code?: unknown; cause?: unknown };
+    if (e.name === 'TimeoutError' || ['ETIMEDOUT', 'UND_ERR_CONNECT_TIMEOUT', 'UND_ERR_HEADERS_TIMEOUT', 'UND_ERR_BODY_TIMEOUT'].includes(String(e.code))) return 'timeout';
+    if (['ENOTFOUND', 'EAI_AGAIN'].includes(String(e.code))) return 'dns';
+    if (['CERT_HAS_EXPIRED', 'CERT_NOT_YET_VALID', 'DEPTH_ZERO_SELF_SIGNED_CERT', 'SELF_SIGNED_CERT_IN_CHAIN',
+      'UNABLE_TO_VERIFY_LEAF_SIGNATURE', 'UNABLE_TO_GET_ISSUER_CERT_LOCALLY', 'ERR_TLS_CERT_ALTNAME_INVALID'].includes(String(e.code))) return 'tls';
+    if (['ECONNREFUSED', 'ECONNRESET', 'ENETUNREACH', 'EHOSTUNREACH', 'UND_ERR_SOCKET'].includes(String(e.code))) return 'connection';
+    error = e.cause;
+  }
+  return 'transport';
 }
 export interface TavusApi {
   createPal(body: Record<string, unknown>): Promise<{ pal_id: string }>;
@@ -14,16 +31,19 @@ export class TavusClient implements TavusApi {
   constructor(private key: string, private transport: typeof fetch = fetch) {}
   private async request(method: string, path: string, expected: number, body?: unknown): Promise<Record<string, unknown>> {
     const create = method === 'POST' && !path.endsWith('/end');
+    let httpStatus: number | undefined; let parsing = false;
     try {
       const response = await this.transport(`https://tavusapi.com${path}`, { method, signal: AbortSignal.timeout(10000),
         redirect: 'error', headers: { 'x-api-key': this.key, ...(body ? { 'content-type': 'application/json' } : {}) },
         ...(body ? { body: JSON.stringify(body) } : {}) });
+      httpStatus = response.status;
       if (response.status !== expected) {
         await response.body?.cancel();
         throw new TavusError(response.status, create && (response.status >= 500 || response.status === 408));
       }
       if (expected === 204 || path.endsWith('/end')) { await response.body?.cancel(); return {}; }
       const text = await response.text();
+      parsing = true;
       if (text.length > 1_000_000) throw new Error('oversized_response');
       const data: unknown = JSON.parse(text);
       if (!data || typeof data !== 'object' || Array.isArray(data)) throw new Error('invalid_resource');
@@ -31,12 +51,12 @@ export class TavusClient implements TavusApi {
     } catch (error) {
       if (error instanceof TavusError) throw error;
       // Never leak response bodies, credentials, signed URLs, or transport errors.
-      throw new TavusError(undefined, create);
+      throw new TavusError(httpStatus, create, parsing ? 'invalid_response' : transportFailure(error));
     }
   }
   async createPal(body: Record<string, unknown>) {
     const data = await this.request('POST', '/v2/pals', 200, body);
-    if (typeof data.pal_id !== 'string' || !data.pal_id) throw new TavusError(200, true);
+    if (typeof data.pal_id !== 'string' || !data.pal_id) throw new TavusError(200, true, 'invalid_response');
     return { pal_id: data.pal_id };
   }
   getPal(id: string) { return this.request('GET', `/v2/pals/${encodeURIComponent(id)}`, 200); }
@@ -44,7 +64,7 @@ export class TavusClient implements TavusApi {
   getVoice(id: string) { return this.request('GET', `/v2/voices/${encodeURIComponent(id)}`, 200); }
   async createConversation(body: Record<string, unknown>) {
     const data = await this.request('POST', '/v2/conversations', 200, body);
-    if (typeof data.conversation_id !== 'string' || !data.conversation_id) throw new TavusError(200, true);
+    if (typeof data.conversation_id !== 'string' || !data.conversation_id) throw new TavusError(200, true, 'invalid_response');
     // Preserve the ID even if join credentials are absent, so cleanup can run.
     return { conversation_id: data.conversation_id, conversation_url: typeof data.conversation_url === 'string' ? data.conversation_url : '', meeting_token: typeof data.meeting_token === 'string' ? data.meeting_token : '' };
   }

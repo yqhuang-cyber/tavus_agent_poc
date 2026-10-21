@@ -7,7 +7,7 @@ import { test } from 'node:test';
 import { promisify } from 'node:util';
 import { isHttpsBaseUrl, readRuntimeConfig, runtimeChecks } from '../packages/config/runtime.js';
 import { assetReadiness } from '../packages/tavus/assets.js';
-import { TavusClient } from '../packages/tavus/client.js';
+import { TavusClient, TavusError } from '../packages/tavus/client.js';
 import { assessMediaMetadata, inspectLocalMedia } from '../packages/tavus/media-preflight.js';
 
 const run = promisify(execFile);
@@ -129,12 +129,12 @@ test('real ffprobe inspects a local synthetic video and hashes its content witho
 });
 
 const script = resolve('scripts/preflight.ts'); const tsx = resolve('node_modules/tsx/dist/loader.mjs');
-async function cli(dir: string, envOverrides: NodeJS.ProcessEnv = {}, args: string[] = []) {
+async function cli(dir: string, envOverrides: NodeJS.ProcessEnv = {}, args: string[] = [], preload?: string) {
   // Preserve inherited managed proxy/TLS settings. Only synthetic child configuration changes.
   const env: NodeJS.ProcessEnv = { ...process.env, ...fixtureEnv, TAVUS_API_KEY: '', TAVUS_FACE_ID: '', RESOURCE_LEDGER: join(dir, 'resources.json'), ...envOverrides };
   delete env.NODE_TEST_CONTEXT; // Child is a CLI, not a test-runner IPC worker.
   let exitCode = 0;
-  try { await run(process.execPath, ['--import', tsx, script, ...args], { cwd: dir, env }); }
+  try { await run(process.execPath, ['--import', tsx, ...(preload ? ['--import', preload] : []), script, ...args], { cwd: dir, env }); }
   catch (error) {
     const result = error as { code: number };
     if (result.code !== 1) throw error;
@@ -163,6 +163,123 @@ test('preflight reports pending resources read-only and blocks missing live asse
   const result = await cli(dir, {}, ['--live-assets']); const report = result.report; assert.equal(result.exitCode, 1);
   assert.equal(report.status, 'blocked'); assert.equal(report.resources.unresolvedCount, 1); assert.equal(report.resources.unknownCount, 1);
   assert.equal(report.assets.status, 'missing-key-or-face-id'); assert.equal(await readFile(path, 'utf8'), data);
+});
+
+async function simulatedAssets(dir: string, scenario: Record<string, unknown> = {}) {
+  const preload = join(dir, 'asset-transport.mjs'); const callsFile = join(dir, 'calls.json');
+  await writeFile(callsFile, '[]');
+  // This replaces fetch entirely, including with inherited proxy variables; no request can leave the test.
+  await writeFile(preload, `
+import assert from 'node:assert/strict';
+import { writeFileSync } from 'node:fs';
+const scenario = ${JSON.stringify(scenario)}; const calls = [];
+globalThis.fetch = async (url, init) => {
+  const path = new URL(url).pathname;
+  calls.push(path); writeFileSync(${JSON.stringify(callsFile)}, JSON.stringify(calls));
+  assert.equal(new URL(url).origin, 'https://tavusapi.com'); assert.equal(init.method, 'GET');
+  assert.equal(init.headers['x-api-key'], 'PRIVATE-KEY');
+  if (scenario.httpStatus) return new Response('PRIVATE-RESPONSE', { status: scenario.httpStatus });
+  if (scenario.malformed) return new Response('PRIVATE-MALFORMED', { status: 200 });
+  if (scenario.code || scenario.name) {
+    const cause = Object.assign(new Error('PRIVATE-CAUSE'), { code: scenario.code });
+    const error = new Error('PRIVATE-KEY PRIVATE-URL', { cause });
+    if (scenario.name) error.name = scenario.name;
+    throw error;
+  }
+  if (path.startsWith('/v2/faces/')) return Response.json({ face_id: 'face-1', default_voice_id: 'voice-1',
+    status: 'completed', model_name: 'phoenix-4', finetune_status: null, ...scenario.face });
+  assert.ok(path.startsWith('/v2/voices/'));
+  return Response.json({ voice_id: decodeURIComponent(path.split('/').at(-1)), status: 'completed', ...scenario.voice });
+};
+`);
+  return { preload, calls: async () => JSON.parse(await readFile(callsFile, 'utf8')) as string[] };
+}
+const assetEnv = { TAVUS_API_KEY: ' PRIVATE-KEY ', TAVUS_FACE_ID: ' face-1 ', TAVUS_VOICE_ID: '' };
+
+test('CLI empty or whitespace Voice uses the Face default instead of failing before any HTTP request', async t => {
+  const dir = await mkdtemp(join(tmpdir(), 'askkai-assets-')); t.after(() => rm(dir, { recursive: true, force: true }));
+  for (const TAVUS_VOICE_ID of ['', '   ', undefined]) {
+    const sim = await simulatedAssets(dir);
+    const out = await cli(dir, { ...assetEnv, TAVUS_VOICE_ID }, ['--live-assets'], sim.preload);
+    assert.equal(out.exitCode, 0); assert.equal(out.report.status, 'checks-passed');
+    assert.equal(out.report.assets.voice.selection, 'face-default'); assert.equal(out.report.assets.requirementPassed, true);
+    assert.equal(out.report.assets.formalPhoenix45TrainingComplete, false);
+    assert.equal(out.report.brandApproval, 'not-evaluated'); assert.equal(out.report.realConversation, 'not-run');
+    assert.equal(out.report.resourceMutations, 0); assert.doesNotMatch(out.data, /PRIVATE/);
+    assert.deepEqual(await sim.calls(), ['/v2/faces/face-1', '/v2/voices/voice-1']);
+  }
+});
+
+test('CLI explicit Voice overrides the default while unavailable or missing voices still block technical checks', async t => {
+  const dir = await mkdtemp(join(tmpdir(), 'askkai-assets-')); t.after(() => rm(dir, { recursive: true, force: true }));
+  const sim = await simulatedAssets(dir);
+  const out = await cli(dir, { ...assetEnv, TAVUS_VOICE_ID: ' selected-voice ' }, ['--live-assets'], sim.preload);
+  assert.equal(out.exitCode, 0); assert.equal(out.report.assets.voice.selection, 'explicit');
+  assert.deepEqual(await sim.calls(), ['/v2/faces/face-1', '/v2/voices/selected-voice']);
+  for (const scenario of [{ voice: { status: 'started' } }, { face: { status: 'started' } }, { face: { default_voice_id: null } }]) {
+    const failed = await simulatedAssets(dir, scenario); const blocked = await cli(dir, assetEnv, ['--live-assets'], failed.preload);
+    assert.equal(blocked.exitCode, 1); assert.equal(blocked.report.assets.requirementPassed, false);
+  }
+});
+
+test('CLI formal training gate is separate from stock-asset technical availability and does not assert brand approval', async t => {
+  const dir = await mkdtemp(join(tmpdir(), 'askkai-assets-')); t.after(() => rm(dir, { recursive: true, force: true }));
+  for (const complete of [false, true]) {
+    const sim = await simulatedAssets(dir, { face: { model_name: 'phoenix-4.5', finetune_status: complete ? 'completed' : 'started' } });
+    const out = await cli(dir, assetEnv, ['--live-assets', '--formal-assets'], sim.preload);
+    assert.equal(out.exitCode, complete ? 0 : 1); assert.equal(out.report.assets.requirement, 'formal-phoenix-4.5-training');
+    assert.equal(out.report.assets.requirementPassed, complete); assert.equal(out.report.brandApproval, 'not-evaluated');
+  }
+});
+
+test('CLI invalid IDs are reported as local validation failures without an HTTP request', async t => {
+  const dir = await mkdtemp(join(tmpdir(), 'askkai-assets-')); t.after(() => rm(dir, { recursive: true, force: true }));
+  const sim = await simulatedAssets(dir);
+  const out = await cli(dir, { ...assetEnv, TAVUS_VOICE_ID: 'v'.repeat(257) }, ['--live-assets'], sim.preload);
+  assert.equal(out.exitCode, 1); assert.deepEqual(await sim.calls(), []);
+  assert.deepEqual(out.report.assets, { status: 'invalid-asset-id', httpStatus: null, failureCode: 'invalid_asset_id' });
+});
+
+test('CLI distinguishes HTTP, transport and malformed responses without exposing raw errors or credentials', async t => {
+  const dir = await mkdtemp(join(tmpdir(), 'askkai-assets-')); t.after(() => rm(dir, { recursive: true, force: true }));
+  const cases = [
+    { scenario: { httpStatus: 401 }, code: 'http', http: 401 },
+    { scenario: { httpStatus: 404 }, code: 'http', http: 404 },
+    { scenario: { code: 'ENOTFOUND' }, code: 'dns', http: null },
+    { scenario: { code: 'UNABLE_TO_GET_ISSUER_CERT_LOCALLY' }, code: 'tls', http: null },
+    { scenario: { code: 'ECONNRESET' }, code: 'connection', http: null },
+    { scenario: { name: 'TimeoutError' }, code: 'timeout', http: null },
+    { scenario: { code: 'PRIVATE-UNLISTED-CODE' }, code: 'transport', http: null },
+    { scenario: { malformed: true }, code: 'invalid_response', http: 200 },
+  ];
+  for (const c of cases) {
+    const sim = await simulatedAssets(dir, c.scenario);
+    const out = await cli(dir, assetEnv, ['--live-assets'], sim.preload);
+    assert.equal(out.exitCode, 1); assert.equal(out.report.assets.failureCode, c.code);
+    assert.equal(out.report.assets.httpStatus, c.http); assert.doesNotMatch(out.data, /PRIVATE/);
+    assert.deepEqual(await sim.calls(), ['/v2/faces/face-1']);
+  }
+});
+
+test('formal asset checking alone cannot enable network access or create a preflight report', async t => {
+  const dir = await mkdtemp(join(tmpdir(), 'askkai-assets-')); t.after(() => rm(dir, { recursive: true, force: true }));
+  const sim = await simulatedAssets(dir); const env: NodeJS.ProcessEnv = { ...process.env, ...fixtureEnv, ...assetEnv }; delete env.NODE_TEST_CONTEXT;
+  await assert.rejects(run(process.execPath, ['--import', tsx, '--import', sim.preload, script, '--formal-assets'], { cwd: dir, env }), error => {
+    assert.match((error as { stderr: string }).stderr, /formal_assets_requires_explicit_live_assets/); return true;
+  });
+  assert.deepEqual(await sim.calls(), []); await assert.rejects(readFile(join(dir, '.runtime/preflight.json')), { code: 'ENOENT' });
+});
+
+test('safe transport diagnostics preserve unknown create outcomes and never retry or retain raw causes', async () => {
+  let attempts = 0;
+  const client = new TavusClient('PRIVATE-KEY', async () => {
+    attempts++; throw new TypeError('PRIVATE-URL', { cause: Object.assign(new Error('PRIVATE-CAUSE'), { code: 'ENOTFOUND' }) });
+  });
+  await assert.rejects(client.createPal({}), error => {
+    assert.ok(error instanceof TavusError); assert.equal(error.failureCode, 'dns'); assert.equal(error.outcomeUnknown, true);
+    assert.equal(error.status, undefined); assert.doesNotMatch(JSON.stringify(error), /PRIVATE/); assert.equal(error.cause, undefined); return true;
+  });
+  assert.equal(attempts, 1);
 });
 
 test('invalid startup configuration fails before ledger recovery or remote mutation', async t => {

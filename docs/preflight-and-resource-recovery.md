@@ -1,5 +1,11 @@
 # 只读预检与资源并发清理：离线交付
 
+2026-10-21 修复：`.env` 中 `TAVUS_VOICE_ID=` 或仅空格现在正确选择 Face 默认声音。此前本地参数校验会被误报为 `asset-get-failed/httpStatus=null`；该输出不能直接归因于网络、key 或素材 ID。新增 7 项回归检查，全仓现为 115 项，实际运行结果以 `.runtime/verification-latest.json` 为准。
+
+`--live-assets` 现在按 Face/Voice 的技术可用性检查，适用于自带 Avatar 的先行联调。正式 Phoenix-4.5 训练门槛显式使用 `--live-assets --formal-assets`，必须同时启用 `--live-assets` 才允许外部 GET。两种模式分别报告 `requirement/requirementPassed`；通过技术检查不自动通过正式训练、真人品牌或中文听感要求。
+
+错误报告增加固定枚举 `failureCode`：`http` 保留实际 HTTP 状态（如 401/404），`timeout/dns/tls/connection/transport` 区分可识别的传输失败，`invalid_response` 表示返回内容无法解析为所需对象；后者保留已收到的 HTTP 状态。`invalid_asset_id` 单独报告本地参数校验失败，未发请求。原始错误、凭证和响应正文仍不输出；`transport` 只表示未能细分，不推断具体原因。
+
 最新交付（2026-10-20）：连接执行、生命周期观测及同源回顾合同已落地，全仓验收口径为 108 项，见 [当前连接与收尾说明](connection-lifecycle-and-review.md)。本页保留其阶段记录。
 
 2026-10-19 11:37（Asia/Shanghai）。本轮继续完成 M0-08～10 不依赖真实接口的子项，真实供应商和真人验收保持未运行。
@@ -13,6 +19,8 @@ npm run preflight
 npm run preflight -- --media /absolute/path/teacher-video.mp4
 # 以后环境具备凭证时，显式启用 Face/Voice GET；本轮没有执行这一项真实请求。
 npm run preflight -- --live-assets
+# 正式 Phoenix-4.5 训练检查（技术联调不需要这个额外门槛）。
+npm run preflight -- --live-assets --formal-assets
 ```
 
 命令读取 `.env`，报告写入 `.runtime/preflight.json`。通过当前启用的检查退出 0，有缺失/失败退出 1。`checks-passed` 仅指本次启用检查通过，不能表示真实联调、授权、品牌或听感通过；报告分别保留这些未运行字段。

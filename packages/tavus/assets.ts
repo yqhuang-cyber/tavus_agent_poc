@@ -2,13 +2,14 @@ export interface TavusAssetApi {
   getFace(id: string): Promise<Record<string, unknown>>;
   getVoice(id: string): Promise<Record<string, unknown>>;
 }
+export class AssetInputError extends Error { constructor() { super('invalid_asset_id'); } }
 const id = (value: unknown): value is string => typeof value === 'string' && value.length > 0 && value.length <= 256;
 const status = (value: unknown, allowed: string[]) => typeof value === 'string' && allowed.includes(value) ? value : 'unknown';
 
 // GET snapshots only. Never turn callback `ready` into GET `completed`, nor
 // training completion into brand approval or actual Chinese speech quality.
 export async function assetReadiness(api: TavusAssetApi, faceId: string, selectedVoiceId?: string) {
-  if (!id(faceId) || (selectedVoiceId !== undefined && !id(selectedVoiceId))) throw new Error('invalid_asset_id');
+  if (!id(faceId) || (selectedVoiceId !== undefined && !id(selectedVoiceId))) throw new AssetInputError();
   const face = await api.getFace(faceId);
   const faceMatches = face.face_id === faceId;
   const voiceId = selectedVoiceId ?? (id(face.default_voice_id) ? face.default_voice_id : undefined);

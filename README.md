@@ -15,13 +15,13 @@ npm ci
 npm run verify:offline
 ```
 
-108 项自动检查、两个并发会话各十轮合成对话已通过。场景矩阵另有 36 场、80 轮协议及程序教学状态回放通过。探针运行真正的 Pi Agent，使用显式合成模型；不调用真实 Tavus，不代表真人语音或教学语义质量通过。一键验收索引在 `.runtime/verification-latest.json`，沿其 report_directory 读取本次测试、探针、矩阵和 20 段未审核样例；每次独立 run ID/源码指纹，失败或旧报告不能整体通过。
+115 项自动检查、两个并发会话各十轮合成对话已通过。场景矩阵另有 36 场、80 轮协议及程序教学状态回放通过。探针运行真正的 Pi Agent，使用显式合成模型；不调用真实 Tavus，不代表真人语音或教学语义质量通过。一键验收索引在 `.runtime/verification-latest.json`，沿其 report_directory 读取本次测试、探针、矩阵和 20 段未审核样例；每次独立 run ID/源码指纹，失败或旧报告不能整体通过。
 
 仍可分别运行 `npm run check`、`npm test`、`npm run probe:offline`、`npm run eval:offline`、`npm run prepare:brand-review`。单独的探针/矩阵命令默认写 `.runtime/`，不替代本次完整验收索引。
 
 现有探针的常驻启动（不是原生主链入口）：复制 `.env.example` 为 `.env`，设置随机 `OPERATOR_TOKEN`，执行 `npm run dev`。默认 fixture/offline，仅监听 localhost。完整配置、内部 API、身份与重试合同、清理和真实联调条件见 [M0 运行说明](docs/m0-runbook.md)。
 
-只读预检：`npm run preflight` 检查配置与资源账本；加 `-- --media /本地视频路径.mp4` 检查素材元数据。默认无外部请求，只有显式 `--live-assets` 才 GET 既有 Face/Voice。配置或当前检查不满足时退出 1；报告中的未运行项继续待验。详见 [预检与并发清理交付](docs/preflight-and-resource-recovery.md)。
+只读预检：`npm run preflight` 检查配置与资源账本；加 `-- --media /本地视频路径.mp4` 检查素材元数据。默认无外部请求，只有显式 `--live-assets` 才 GET 既有 Face/Voice，按技术可用性检查；Voice 留空使用 Face 的默认声音。正式 Phoenix-4.5 训练检查另加 `--formal-assets`。配置或当前检查不满足时退出 1；报告中的未运行项继续待验。详见 [预检与并发清理交付](docs/preflight-and-resource-recovery.md)。
 
 ## 文档
 
